@@ -1,0 +1,151 @@
+<!-- $Id: mod_sftp_sql.html,v 1.4 2010/02/04 19:26:53 castaglia Exp $ -->
+<!-- $Source: /cvsroot/proftp/proftpd/doc/contrib/mod_sftp_sql.html,v $ -->
+
+<html>
+<head>
+<title>ProFTPD module mod_sftp_ldap</title>
+</head>
+
+<body bgcolor=white>
+
+<hr>
+<center>
+<h2><b>ProFTPD module <code>mod_sftp_sql</code></b></h2>
+</center>
+<hr><br>
+
+<p>
+The <a href="http://www.castaglia.org/proftpd/modules/mod_sftp.html"><code>mod_sftp</code></a> module for ProFTPD can support different storage formats for
+its user- and host-based authorized keys.  By default, the <code>mod_sftp</code>
+module supports storing authorized keys in flats.  This
+<code>mod_sftp_ldap</code> module allows for authorized SSH keys to be stored
+in LDAP directories.
+
+<p>
+This module is contained in the <code>mod_sftp_ldap.c</code> file for
+ProFTPD 1.3.<i>x</i>, and is not compiled by default.  Installation
+instructions are discussed <a href="#Installation">here</a>.
+
+<p>
+The most current version of <code>mod_sftp_ldap</code> can be found at:
+<pre>
+  <a href="http://www.castaglia.org/proftpd/">http://www.castaglia.org/proftpd/</a>
+</pre>
+
+<p>
+This product includes software developed by the OpenSSL Project for use in the
+OpenSSL Toolkit (<a href="http://www.openssl.org/">http://www.openssl.org/</a>).
+This product includes cryptographic software written by Eric Young (eay@cryptsoft.com).
+
+<h2>Author</h2>
+<p>
+Please contact TJ Saunders &lt;tj <i>at</i> castaglia.org&gt; with any
+questions, concerns, or suggestions regarding this module.
+
+<p>
+<hr>
+<h2><a name="Installation">Installation</a></h2>
+To install <code>mod_sftp_ldap</code>, copy the <code>mod_sftp_ldap.c</code>
+file into:
+<pre>
+  <i>proftpd-dir</i>/contrib/
+</pre>
+after unpacking the latest proftpd-1.3.<i>x</i> source code.  Then follow the
+usual steps for using third-party modules in proftpd, making sure to include
+the <code>mod_sftp</code> and <code>mod_ldap</code> modules, which
+<code>mod_sftp_ldap</code> requires.  For example, you might use:
+<pre>
+  ./configure --with-modules=mod_ldap:mod_sftp:mod_sftp_ldap ...
+  make
+  make install
+</pre>
+
+<p>
+<hr><br>
+<h2><a name="Usage">Usage</a></h2>
+
+<p>
+The <code>mod_sftp_ldap</code> module works by using hooks in the
+<code>mod_ldap</code> module code to retrieve authorized user keys during
+the LDAP queries.  Thus the <code>mod_sftp_ldap</code> module has no
+configuration directives of its own.
+
+<p>
+To help demonstrate, see the example configuration below:
+<pre>
+  &lt;IfModule mod_ldap.c&gt;
+    # mod_ldap configuration here
+  &lt;/IfModule&gt;
+
+  &lt;IfModule mod_sftp.c&gt;
+    SFTPEngine on
+    SFTPLog /path/to/sftp.log
+
+    # Host keys, for server host authentication
+    SFTPHostKey /etc/ssh_host_dsa_key
+    SFTPHostKey /etc/ssh_host_rsa_key
+
+    &lt;IfModule mod_sftp_ldap.c&gt; 
+      # Instead of using a file-based key store, we tell mod_sftp to use
+      # the LDAP-based key store provided by mod_sftp_ldap
+      SFTPAuthorizedUserKeys ldap:
+    &lt;/IfModule&gt;
+  &lt;/IfModule&gt;
+</pre>
+
+<p>
+What should the schema be, for the directory entry which holds these authorized
+keys?  The <code>mod_sftp_ldap</code> module assumes a <code>posixAccount</code>
+user entry with an <code>ldapPublicKey</code> objectclass and
+<code>sshPublicKey</code> attributes; multiple <code>sshPublicKey</code>
+attributes are allowed.
+
+<p>
+Example:
+<pre>
+  dn: uid=foo,ou=users,dc=example,dc=com
+  objectclass: top
+  objectclass: person
+  bjectclass: organizationalPerson
+  objectclass: posixAccount
+  objectclass: ldapPublicKey
+  description: John Doe Account
+  userPassword: {crypt}0LXhFAsrBWEEQ
+  cn: John Doe
+  sn: John Doe
+  uid: foo
+  uidNumber: 1234
+  gidNumber: 123
+  homeDirectory: /home/foo
+  sshPublicKey: ---- BEGIN SSH2 PUBLIC KEY ---- ...
+  sshPublicKey: ---- BEGIN SSH2 PUBLIC KEY ---- ...
+</pre>
+
+<p>
+Which leads to the next question: how can I transfer existing authorized
+SSH keys from their current flat files into the LDAP entries?  First, you need
+to make sure that the key is in the RFC4716 format, using:
+<pre>
+  # ssh-keygen -e -f /path/to/key.pub
+</pre>
+Then simply add the output data to your LDAP entry's <code>sshPublicKey</code>
+attribute.
+
+<p>
+<hr><br>
+
+Author: <i>$Author: castaglia $</i><br>
+Last Updated: <i>$Date: 2010/02/04 19:26:53 $</i><br>
+
+<br><hr>
+
+<font size=2><b><i>
+&copy; Copyright 2010 TJ Saunders<br>
+ All Rights Reserved<br>
+</i></b></font>
+
+<hr><br>
+
+</body>
+</html>
+
