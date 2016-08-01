@@ -1,7 +1,6 @@
 /*
  * ProFTPD: mod_sftp_ldap -- LDAP backend module for retrieving authorized keys
- *
- * Copyright (c) 2010 TJ Saunders
+ * Copyright (c) 2010-2016 TJ Saunders
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,7 +34,7 @@ struct ldapstore_key {
   const char *subject;
 
   /* Key data */
-  char *key_data;
+  unsigned char *key_data;
   uint32_t key_datalen;
 };
 
@@ -168,7 +167,7 @@ static struct ldapstore_key *ldapstore_get_key_rfc4716(pool *p, char *blob) {
   if (chunklen < 0 &&
       !BIO_should_retry(bio)) {
     (void) pr_log_writefile(sftp_logfd, MOD_SFTP_LDAP_VERSION,
-      "unable to base64-decode data from database: %s",
+      "unable to base64-decode data from LDAP directory: %s",
       sftp_crypto_get_errors());
     BIO_free_all(bio);
     BIO_free_all(bmem);
@@ -205,7 +204,7 @@ static struct ldapstore_key *ldapstore_get_key_rfc4716(pool *p, char *blob) {
 
   } else {
     (void) pr_log_writefile(sftp_logfd, MOD_SFTP_LDAP_VERSION,
-      "error base64-decoding key data from database");
+      "error base64-decoding key data from LDAP directory");
   }
 
   BIO_free_all(bio);
@@ -216,7 +215,7 @@ static struct ldapstore_key *ldapstore_get_key_rfc4716(pool *p, char *blob) {
 }
 
 static int ldapstore_verify_user_key(sftp_keystore_t *store, pool *p,
-    const char *user, char *key_data, uint32_t key_datalen) {
+    const char *user, unsigned char *key_data, uint32_t key_datalen) {
   register unsigned int i;
   struct ldapstore_key *key;
   pool *tmp_pool;
