@@ -26,7 +26,7 @@ script:
   # - find . -type f -name "*.c" -print | grep -v t\/ | xargs cppcheck 2>&1
   # - find . -type f -name "*.c" -print | grep -v t\/ | xargs rats --language=c
   - git clone https://github.com/proftpd/proftpd.git
-  - mkdir -p proftpd/contrib/mod_sftp_ldap/t
+  - mkdir -p proftpd/contrib/mod_sftp_ldap/
   - cp mod_sftp_ldap.c proftpd/contrib/mod_sftp_ldap/
   - cp Makefile.in proftpd/contrib/mod_sftp_ldap/
   - cp config* proftpd/contrib/mod_sftp_ldap/
