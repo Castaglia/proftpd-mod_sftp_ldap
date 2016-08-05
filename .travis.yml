@@ -36,7 +36,7 @@ script:
   - make clean
   - ./configure --enable-devel=coverage --enable-openssl --enable-tests --with-modules=mod_sftp:mod_sftp_ldap
   - make
-  - cd contrib/mod_sftp_ldap/t && make TEST_VERBOSE=1 api-tests && cd ../../../
+  - cd contrib/mod_sftp_ldap && make TEST_VERBOSE=1 check && cd ../../../
 
 after_success:
   - cd ${TRAVIS_BUILD_DIR}
