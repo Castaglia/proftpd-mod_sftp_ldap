@@ -29,6 +29,9 @@
 
 #include "conf.h"
 
+/* Assume, for now, that the check library is installed/available. */
+#include <check.h>
+
 Suite *tests_get_keys_suite(void);
 
 unsigned int recvd_signal_flags;
