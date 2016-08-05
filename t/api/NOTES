@@ -1,0 +1,6 @@
+We can create a fake HOOK, as provided by mod_ldap, for supplying the necessary
+key data to mod_sftp_ldap.  Next, then, how to exercise those functions
+for parsing/extracting keys from that data?
+
+And how to do these tests, when there is no top-level configure script?  We
+just need a Makefile (right)?  Maybe provide a configure script?
