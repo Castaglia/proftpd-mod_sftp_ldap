@@ -27,11 +27,7 @@
 #ifndef MOD_SFTP_LDAP_TESTS_H
 #define MOD_SFTP_LDAP_TESTS_H
 
-#ifdef HAVE_CHECK_H
-# include <check.h>
-#else
-# error "Missing Check installation; necessary for ProFTPD testsuite"
-#endif
+#include "conf.h"
 
 Suite *tests_get_keys_suite(void);
 
