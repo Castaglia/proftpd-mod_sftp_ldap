@@ -39,7 +39,7 @@ TEST_API_DEPS=\
   $(top_srcdir)/src/env.o \
   $(top_srcdir)/src/trace.o \
   $(top_srcdir)/src/support.o \
-  $(module_srcdir)/mod_sftp_ldap.o
+  $(module_srcdir)/keys.o
 
 TEST_API_LIBS=-lcheck
 

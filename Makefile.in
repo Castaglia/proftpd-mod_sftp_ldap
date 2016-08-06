@@ -11,9 +11,11 @@ SHARED_LDFLAGS=-avoid-version -export-dynamic -module
 VPATH=@srcdir@
 
 MODULE_NAME=mod_sftp_ldap
-MODULE_OBJS=mod_sftp_ldap.o
+MODULE_OBJS=mod_sftp_ldap.o \
+  keys.o
 
-SHARED_MODULE_OBJS=mod_sftp_ldap.lo
+SHARED_MODULE_OBJS=mod_sftp_ldap.lo \
+  keys.lo
 
 # Necessary redefinitions
 INCLUDES=-I. -I./include -I../.. -I../../include @INCLUDES@

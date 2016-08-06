@@ -28,24 +28,45 @@
 
 static pool *p = NULL;
 
+struct ldapstore_key {
+  unsigned char *key_data;
+  uint32_t key_datalen;
+};
+
 static void set_up(void) {
   if (p == NULL) {
-    p = make_sub_pool(NULL);
+    sftp_pool = p = make_sub_pool(NULL);
   }
 
   if (getenv("TEST_VERBOSE") != NULL) {
+    pr_trace_set_levels("ssh2", 1, 20);
   }
 }
 
 static void tear_down(void) {
   if (getenv("TEST_VERBOSE") != NULL) {
+    pr_trace_set_levels("ssh2", 0, 0);
   }
 
   if (p) {
     destroy_pool(p);
-    p = NULL;
+    sftp_pool = p = NULL;
   } 
 }
+
+/* Notes: we are targetting the ldapstore_verify_user_key() function.
+ * Alternatively, we could target the following directly:
+ *   ldapstore_verify_key_rfc4716()
+ *   ldapstore_verify_key_raw()
+ *
+ * Or, even better:
+ *   ldapstore_get_key_rfc4716()
+ *   ldapstore_get_key_raw()
+ *
+ * This latter approach would require having struct ldapstore_key defined
+ * in an accessible place, or redefined in stubs.  OR split them out
+ * into keys.[ch] files -- easier testing.
+ */
 
 START_TEST (raw_key_test) {
 }

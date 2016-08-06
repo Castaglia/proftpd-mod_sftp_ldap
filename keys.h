@@ -1,6 +1,6 @@
 /*
- * ProFTPD - mod_sftp_ldap API testsuite
- * Copyright (c) 2016 TJ Saunders <tj@castaglia.org>
+ * ProFTPD - mod_sftp_ldap keys
+ * Copyright (c) 2016 TJ Saunders
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,23 +22,15 @@
  * source distribution.
  */
 
-/* Testsuite management */
-
-#ifndef MOD_SFTP_LDAP_TESTS_H
-#define MOD_SFTP_LDAP_TESTS_H
-
 #include "mod_sftp_ldap.h"
 
-#ifdef HAVE_CHECK_H
-# include <check.h>
-#else
-# error "Missing Check installation; necessary for ProFTPD testsuite"
-#endif
+#ifndef MOD_SFTP_LDAP_KEYS_H
+#define MOD_SFTP_LDAP_KEYS_H
 
-Suite *tests_get_keys_suite(void);
+int sftp_ldap_keys_parse_raw(pool *p, char **blob, size_t bloblen,
+  unsigned char **key_data, uint32_t *key_datalen);
 
-unsigned int recvd_signal_flags;
-extern pid_t mpid;
-extern server_rec *main_server;
+int sftp_ldap_keys_parse_rfc4716(pool *p, char **blob, size_t bloblen,
+  unsigned char **key_data, uint32_t *key_datalen);
 
-#endif /* MOD_SFTP_LDAP_TESTS_H */
+#endif /* MOD_SFTP_LDAP_KEYS_H */
