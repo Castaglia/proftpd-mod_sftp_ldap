@@ -1,5 +1,5 @@
 /*
- * ProFTPD - mod_aws API testsuite
+ * ProFTPD - mod_sftp_ldap API testsuite
  * Copyright (c) 2016 TJ Saunders <tj@castaglia.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -35,11 +35,6 @@ unsigned int recvd_signal_flags = 0;
 module *static_modules[] = { NULL };
 module *loaded_modules = NULL;
 xaset_t *server_list = NULL;
-
-int aws_logfd = -1;
-module aws_module;
-pool *aws_pool = NULL;
-unsigned long aws_opts = 0UL;
 
 static cmd_rec *next_cmd = NULL;
 
@@ -197,32 +192,3 @@ void pr_signals_handle(void) {
 }
 
 /* Module-specific stubs */
-
-module aws_module = {
-  /* Always NULL */
-  NULL, NULL,
-
-  /* Module API version */
-  0x20,
-
-  /* Module name */
-  "aws",
-
-  /* Module configuration handler table */
-  NULL,
-
-  /* Module command handler table */
-  NULL,
-
-  /* Module authentication handler table */
-  NULL,
-
-  /* Module initialization */
-  NULL,
-
-  /* Session initialization */
-  NULL,
-
-  /* Module version */
-  MOD_AWS_VERSION
-};
