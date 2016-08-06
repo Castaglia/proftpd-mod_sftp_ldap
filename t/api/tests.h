@@ -28,6 +28,7 @@
 #define MOD_SFTP_LDAP_TESTS_H
 
 #include "conf.h"
+#include "mod_sftp.h"
 
 /* Assume, for now, that the check library is installed/available. */
 #include <check.h>

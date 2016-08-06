@@ -36,6 +36,12 @@ module *static_modules[] = { NULL };
 module *loaded_modules = NULL;
 xaset_t *server_list = NULL;
 
+int sftp_logfd = -1;
+pool *sftp_pool = NULL;
+unsigned long sftp_opts = 0UL;
+unsigned int sftp_services = 0;
+unsigned int sftp_sess_state = 0;
+
 static cmd_rec *next_cmd = NULL;
 
 int login_check_limits(xaset_t *set, int recurse, int and, int *found) {
