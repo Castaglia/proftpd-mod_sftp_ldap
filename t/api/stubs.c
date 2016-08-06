@@ -38,9 +38,6 @@ xaset_t *server_list = NULL;
 
 int sftp_logfd = -1;
 pool *sftp_pool = NULL;
-unsigned long sftp_opts = 0UL;
-unsigned int sftp_services = 0;
-unsigned int sftp_sess_state = 0;
 
 static cmd_rec *next_cmd = NULL;
 
@@ -198,3 +195,14 @@ void pr_signals_handle(void) {
 }
 
 /* Module-specific stubs */
+
+const char *sftp_crypto_get_errors(void) {
+  return "(to be implemented)"
+}
+
+int sftp_keys_compare_keys(pool *p,
+    unsigned char *remote_data, uint32_t remote_datalen,
+    unsigned char *local_data, uint32_t local_datalen) {
+  errno = ENOSYS;
+  return -1;
+}

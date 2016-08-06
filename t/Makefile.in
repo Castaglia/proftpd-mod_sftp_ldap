@@ -39,13 +39,6 @@ TEST_API_DEPS=\
   $(top_srcdir)/src/env.o \
   $(top_srcdir)/src/trace.o \
   $(top_srcdir)/src/support.o \
-  $(top_srcdir)/contrib/mod_sftp/msg.o \
-  $(top_srcdir)/contrib/mod_sftp/packet.o \
-  $(top_srcdir)/contrib/mod_sftp/umac.o \
-  $(top_srcdir)/contrib/mod_sftp/crypto.o \
-  $(top_srcdir)/contrib/mod_sftp/keys.o \
-  $(top_srcdir)/contrib/mod_sftp/agent.o \
-  $(top_srcdir)/contrib/mod_sftp/interop.o \
   $(module_srcdir)/mod_sftp_ldap.o
 
 TEST_API_LIBS=-lcheck
