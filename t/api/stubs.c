@@ -206,3 +206,10 @@ int sftp_keys_compare_keys(pool *p,
   errno = ENOSYS;
   return -1;
 }
+
+int sftp_keystore_register_store(const char *store_type,
+    sftp_keystore_t *(store_open)(pool *, int, const char *, const char *),
+    unsigned int store_ktypes) {
+  errno = ENOSYS;
+  return -1;
+}
