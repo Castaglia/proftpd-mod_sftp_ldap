@@ -26,6 +26,7 @@
 #define MOD_SFTP_LDAP_H
 
 #include "conf.h"
+#include "mod_sftp.h"
 
 #define MOD_SFTP_LDAP_VERSION			"mod_sftp_ldap/0.2"
 

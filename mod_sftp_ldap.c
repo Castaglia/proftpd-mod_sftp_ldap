@@ -86,7 +86,7 @@ static int ldapstore_verify_key_rfc4716(pool *p, int nrow, char *ldap_data,
       parsed_data = NULL;
       parsed_datalen = 0;
       res = sftp_ldap_keys_parse_rfc4716(p, &ldap_data, &ldap_datalen,
-        &parse_data, &parsed_datalen;);
+        &parsed_data, &parsed_datalen);
       continue;
 
     } else if (res == FALSE) {
@@ -96,7 +96,7 @@ static int ldapstore_verify_key_rfc4716(pool *p, int nrow, char *ldap_data,
       parsed_data = NULL;
       parsed_datalen = 0;
       res = sftp_ldap_keys_parse_rfc4716(p, &ldap_data, &ldap_datalen,
-        &parse_data, &parsed_datalen;);
+        &parsed_data, &parsed_datalen);
       continue;
     }
 

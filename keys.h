@@ -27,10 +27,10 @@
 #ifndef MOD_SFTP_LDAP_KEYS_H
 #define MOD_SFTP_LDAP_KEYS_H
 
-int sftp_ldap_keys_parse_raw(pool *p, char **blob, size_t bloblen,
+int sftp_ldap_keys_parse_raw(pool *p, char **blob, size_t *bloblen,
   unsigned char **key_data, uint32_t *key_datalen);
 
-int sftp_ldap_keys_parse_rfc4716(pool *p, char **blob, size_t bloblen,
+int sftp_ldap_keys_parse_rfc4716(pool *p, char **blob, size_t *bloblen,
   unsigned char **key_data, uint32_t *key_datalen);
 
 #endif /* MOD_SFTP_LDAP_KEYS_H */
