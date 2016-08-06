@@ -197,7 +197,7 @@ void pr_signals_handle(void) {
 /* Module-specific stubs */
 
 const char *sftp_crypto_get_errors(void) {
-  return "(to be implemented)"
+  return "(to be implemented)";
 }
 
 int sftp_keys_compare_keys(pool *p,
