@@ -28,11 +28,6 @@
 
 static pool *p = NULL;
 
-struct ldapstore_key {
-  unsigned char *key_data;
-  uint32_t key_datalen;
-};
-
 static void set_up(void) {
   if (p == NULL) {
     sftp_pool = p = make_sub_pool(NULL);
@@ -54,25 +49,11 @@ static void tear_down(void) {
   } 
 }
 
-/* Notes: we are targetting the ldapstore_verify_user_key() function.
- * Alternatively, we could target the following directly:
- *   ldapstore_verify_key_rfc4716()
- *   ldapstore_verify_key_raw()
- *
- * Or, even better:
- *   ldapstore_get_key_rfc4716()
- *   ldapstore_get_key_raw()
- *
- * This latter approach would require having struct ldapstore_key defined
- * in an accessible place, or redefined in stubs.  OR split them out
- * into keys.[ch] files -- easier testing.
- */
-
-START_TEST (raw_key_test) {
+START_TEST (keys_parse_raw_test) {
 }
 END_TEST
 
-START_TEST (rfc4716_key_test) {
+START_TEST (keys_parse_rfc4716_test) {
   /* One key WITH Comment/Subject headers (fail), one key without */
 }
 END_TEST
@@ -86,8 +67,8 @@ Suite *tests_get_keys_suite(void) {
 
   tcase_add_checked_fixture(testcase, set_up, tear_down);
 
-  tcase_add_test(testcase, raw_key_test);
-  tcase_add_test(testcase, rfc4716_key_test);
+  tcase_add_test(testcase, keys_parse_raw_test);
+  tcase_add_test(testcase, keys_parse_rfc4716_test);
 
   suite_add_tcase(suite, testcase);
   return suite;

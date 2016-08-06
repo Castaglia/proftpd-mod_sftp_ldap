@@ -271,12 +271,11 @@ int sftp_ldap_keys_parse_rfc4716(pool *p, char **blob, size_t *bloblen,
   while (line != NULL) {
     pr_signals_handle();
 
-    if (key == NULL &&
+    if (bio == NULL &&
         strncmp(line, SFTP_SSH2_PUBKEY_BEGIN_MARKER, begin_markerlen) == 0) {
       bio = BIO_new(BIO_s_mem());
 
-    } else if (key != NULL &&
-               strncmp(line, SFTP_SSH2_PUBKEY_END_MARKER, end_markerlen) == 0) {
+    } else if (strncmp(line, SFTP_SSH2_PUBKEY_END_MARKER, end_markerlen) == 0) {
       if (bio != NULL) {
         char chunk[SFTP_LDAP_BUFSZ], *data = NULL;
         BIO *b64 = NULL, *bmem = NULL;
