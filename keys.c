@@ -346,20 +346,9 @@ int sftp_ldap_keys_parse_rfc4716(pool *p, char **blob, size_t *bloblen,
       break;
 
     } else {
-      if (key) {
-        if (strstr(line, ": ") != NULL) {
-          if (strncasecmp(line, "Subject: ", 9) == 0) {
-            /* XXX Return error?  This is not supported for LDAP-provided keys,
-             * are a single line of text.
-             */
-          }
-
-        } else {
-          if (BIO_write(bio, line, strlen(line)) < 0) {
-            (void) pr_log_writefile(sftp_logfd, MOD_SFTP_LDAP_VERSION,
-              "error buffering base64 data: %s", sftp_crypto_get_errors());
-          }
-        }
+      if (BIO_write(bio, line, strlen(line)) < 0) {
+        (void) pr_log_writefile(sftp_logfd, MOD_SFTP_LDAP_VERSION,
+          "error buffering base64 data: %s", sftp_crypto_get_errors());
       }
     }
 
