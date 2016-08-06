@@ -28,6 +28,39 @@
 
 static pool *p = NULL;
 
+static const char *raw_key = "ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAzJ1CLwnVP9mUa8uyM+XBzxLxsRvGz4cS59aPTgdw7jGx1jCvC9ya400x7ej5Q4ubwlAAPblXzG5GYv2ROmYQ1DIjrhmR/61tDKUvAAZIgtvLZ00ydqqpq5lG4ubVJ4gW6sxbPfq/X12kV1gxGsFLUJCgoYInZGyIONrnvmQjFIfIx+mQXaK84uO6w0CT6KhRWgonajMrlO6P8O7qr80rFmOZsBNIMooyYrGTaMyxVsQK2SY+VKbXWFC+2HMmef62n+02ohAOBKtOsSOn8HE2wi7yMA0g8jRTd8kZcWBIkAhizPvl8pqG1F0DCmLn00rhPkByq2pv4VBo953gK7f1AQ== tj@Imp.local";
+
+static const char *rfc4716_single_line_key =
+  "---- BEGIN SSH2 PUBLIC KEY ----"
+  "AAAAB3NzaC1yc2EAAAABIwAAAQEAzJ1CLwnVP9mUa8uyM+XBzxLxsRvGz4cS59aPTgdw7j"
+  "Gx1jCvC9ya400x7ej5Q4ubwlAAPblXzG5GYv2ROmYQ1DIjrhmR/61tDKUvAAZIgtvLZ00y"
+  "dqqpq5lG4ubVJ4gW6sxbPfq/X12kV1gxGsFLUJCgoYInZGyIONrnvmQjFIfIx+mQXaK84u"
+  "O6w0CT6KhRWgonajMrlO6P8O7qr80rFmOZsBNIMooyYrGTaMyxVsQK2SY+VKbXWFC+2HMm"
+  "ef62n+02ohAOBKtOsSOn8HE2wi7yMA0g8jRTd8kZcWBIkAhizPvl8pqG1F0DCmLn00rhPk"
+  "Byq2pv4VBo953gK7f1AQ=="
+  "---- END SSH2 PUBLIC KEY ----";
+
+static const char *rfc4716_multiline_key =
+  "---- BEGIN SSH2 PUBLIC KEY ----\\n"
+  "AAAAB3NzaC1yc2EAAAABIwAAAQEAzJ1CLwnVP9mUa8uyM+XBzxLxsRvGz4cS59aPTgdw7j\\n"
+  "Gx1jCvC9ya400x7ej5Q4ubwlAAPblXzG5GYv2ROmYQ1DIjrhmR/61tDKUvAAZIgtvLZ00y\\n"
+  "dqqpq5lG4ubVJ4gW6sxbPfq/X12kV1gxGsFLUJCgoYInZGyIONrnvmQjFIfIx+mQXaK84u\\n"
+  "O6w0CT6KhRWgonajMrlO6P8O7qr80rFmOZsBNIMooyYrGTaMyxVsQK2SY+VKbXWFC+2HMm\\n"
+  "ef62n+02ohAOBKtOsSOn8HE2wi7yMA0g8jRTd8kZcWBIkAhizPvl8pqG1F0DCmLn00rhPk\\n"
+  "Byq2pv4VBo953gK7f1AQ==\\n"
+  "---- END SSH2 PUBLIC KEY ----\\n";
+
+static const char *rfc4716_multiline_key_with_subject =
+  "---- BEGIN SSH2 PUBLIC KEY ----\\n"
+  "Comment: \"2048-bit RSA, converted from OpenSSH by tj@Imp.local\"\\n"
+  "AAAAB3NzaC1yc2EAAAABIwAAAQEAzJ1CLwnVP9mUa8uyM+XBzxLxsRvGz4cS59aPTgdw7j\\n"
+  "Gx1jCvC9ya400x7ej5Q4ubwlAAPblXzG5GYv2ROmYQ1DIjrhmR/61tDKUvAAZIgtvLZ00y\\n"
+  "dqqpq5lG4ubVJ4gW6sxbPfq/X12kV1gxGsFLUJCgoYInZGyIONrnvmQjFIfIx+mQXaK84u\\n"
+  "O6w0CT6KhRWgonajMrlO6P8O7qr80rFmOZsBNIMooyYrGTaMyxVsQK2SY+VKbXWFC+2HMm\\n"
+  "ef62n+02ohAOBKtOsSOn8HE2wi7yMA0g8jRTd8kZcWBIkAhizPvl8pqG1F0DCmLn00rhPk\\n"
+  "Byq2pv4VBo953gK7f1AQ==\\n"
+  "---- END SSH2 PUBLIC KEY ----\\n";
+
 static void set_up(void) {
   if (p == NULL) {
     sftp_pool = p = make_sub_pool(NULL);
@@ -49,11 +82,101 @@ static void tear_down(void) {
   } 
 }
 
-START_TEST (keys_parse_raw_test) {
+START_TEST (keys_parse_raw_invalid_params_test) {
+  int res;
+  char *blob = NULL;
+  size_t bloblen = 0;
+  unsigned char *key_data = NULL;
+
+  res = sftp_ldap_keys_parse_raw(NULL, NULL, NULL, NULL, NULL);
+  fail_unless(res < 0, "Failed to handle null pool");
+  fail_unless(errno == EINVAL, "Expected EINVAL (%d), got %s (%d)", EINVAL,
+    strerror(errno), errno);
+
+  res = sftp_ldap_keys_parse_raw(p, NULL, NULL, NULL, NULL);
+  fail_unless(res < 0, "Failed to handle null blob");
+  fail_unless(errno == EINVAL, "Expected EINVAL (%d), got %s (%d)", EINVAL,
+    strerror(errno), errno);
+
+  res = sftp_ldap_keys_parse_raw(p, &blob, NULL, NULL, NULL);
+  fail_unless(res < 0, "Failed to handle null bloblen");
+  fail_unless(errno == EINVAL, "Expected EINVAL (%d), got %s (%d)", EINVAL,
+    strerror(errno), errno);
+
+  res = sftp_ldap_keys_parse_raw(p, &blob, &bloblen, NULL, NULL);
+  fail_unless(res < 0, "Failed to handle null key data");
+  fail_unless(errno == EINVAL, "Expected EINVAL (%d), got %s (%d)", EINVAL,
+    strerror(errno), errno);
+
+  res = sftp_ldap_keys_parse_raw(p, &blob, &bloblen, &key_data, NULL);
+  fail_unless(res < 0, "Failed to handle null key datalen");
+  fail_unless(errno == EINVAL, "Expected EINVAL (%d), got %s (%d)", EINVAL,
+    strerror(errno), errno);
 }
 END_TEST
 
-START_TEST (keys_parse_rfc4716_test) {
+START_TEST (keys_parse_raw_single_line_test) {
+  int res;
+  char *blob;
+  size_t bloblen;
+  unsigned char *key_data = NULL;
+  uint32_t key_datalen = 0;
+
+  blob = "foo\n";
+  bloblen = strlen(blob);
+  res = sftp_ldap_keys_parse_raw(p, &blob, &bloblen, &key_data, &key_datalen);
+  fail_unless(res < 0, "Failed to handle invalid key");
+  fail_unless(errno == ENOENT, "Expected ENOENT (%d), got %s (%d)", ENOENT,
+    strerror(errno), errno);
+
+  blob = raw_key;
+  bloblen = strlen(raw_key);
+  key_data = NULL;
+  key_datalen = 0;
+  res = sftp_ldap_keys_parse_raw(p, &blob, &bloblen, &key_data, &key_datalen);
+  fail_unless(res == 0, "Failed to handle valid key: %s", strerror(errno));
+}
+END_TEST
+
+START_TEST (keys_parse_rfc4716_invalid_params_test) {
+  int res;
+  char *blob = NULL;
+  size_t bloblen = 0;
+  unsigned char *key_data = NULL;
+
+  res = sftp_ldap_keys_parse_rfc4716(NULL, NULL, NULL, NULL, NULL);
+  fail_unless(res < 0, "Failed to handle null pool");
+  fail_unless(errno == EINVAL, "Expected EINVAL (%d), got %s (%d)", EINVAL,
+    strerror(errno), errno);
+
+  res = sftp_ldap_keys_parse_rfc4716(p, NULL, NULL, NULL, NULL);
+  fail_unless(res < 0, "Failed to handle null blob");
+  fail_unless(errno == EINVAL, "Expected EINVAL (%d), got %s (%d)", EINVAL,
+    strerror(errno), errno);
+
+  res = sftp_ldap_keys_parse_rfc4716(p, &blob, NULL, NULL, NULL);
+  fail_unless(res < 0, "Failed to handle null bloblen");
+  fail_unless(errno == EINVAL, "Expected EINVAL (%d), got %s (%d)", EINVAL,
+    strerror(errno), errno);
+
+  res = sftp_ldap_keys_parse_rfc4716(p, &blob, &bloblen, NULL, NULL);
+  fail_unless(res < 0, "Failed to handle null key data");
+  fail_unless(errno == EINVAL, "Expected EINVAL (%d), got %s (%d)", EINVAL,
+    strerror(errno), errno);
+
+  res = sftp_ldap_keys_parse_rfc4716(p, &blob, &bloblen, &key_data, NULL);
+  fail_unless(res < 0, "Failed to handle null key datalen");
+  fail_unless(errno == EINVAL, "Expected EINVAL (%d), got %s (%d)", EINVAL,
+    strerror(errno), errno);
+}
+END_TEST
+
+START_TEST (keys_parse_rfc4716_single_line_test) {
+  /* One key WITH Comment/Subject headers (fail), one key without */
+}
+END_TEST
+
+START_TEST (keys_parse_rfc4716_multi_lines_test) {
   /* One key WITH Comment/Subject headers (fail), one key without */
 }
 END_TEST
@@ -67,8 +190,11 @@ Suite *tests_get_keys_suite(void) {
 
   tcase_add_checked_fixture(testcase, set_up, tear_down);
 
-  tcase_add_test(testcase, keys_parse_raw_test);
-  tcase_add_test(testcase, keys_parse_rfc4716_test);
+  tcase_add_test(testcase, keys_parse_raw_invalid_params_test);
+  tcase_add_test(testcase, keys_parse_raw_single_line_test);
+  tcase_add_test(testcase, keys_parse_rfc4716_invalid_params_test);
+  tcase_add_test(testcase, keys_parse_rfc4716_single_line_test);
+  tcase_add_test(testcase, keys_parse_rfc4716_multi_line_test);
 
   suite_add_tcase(suite, testcase);
   return suite;
