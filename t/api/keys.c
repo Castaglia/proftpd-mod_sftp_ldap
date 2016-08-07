@@ -41,26 +41,37 @@ static const char *rfc4716_single_line_key =
   "Byq2pv4VBo953gK7f1AQ=="
   "---- END SSH2 PUBLIC KEY ----";
 
-static const char *rfc4716_multiline_key =
-  "---- BEGIN SSH2 PUBLIC KEY ----\\n"
-  "AAAAB3NzaC1yc2EAAAABIwAAAQEAzJ1CLwnVP9mUa8uyM+XBzxLxsRvGz4cS59aPTgdw7j\\n"
-  "Gx1jCvC9ya400x7ej5Q4ubwlAAPblXzG5GYv2ROmYQ1DIjrhmR/61tDKUvAAZIgtvLZ00y\\n"
-  "dqqpq5lG4ubVJ4gW6sxbPfq/X12kV1gxGsFLUJCgoYInZGyIONrnvmQjFIfIx+mQXaK84u\\n"
-  "O6w0CT6KhRWgonajMrlO6P8O7qr80rFmOZsBNIMooyYrGTaMyxVsQK2SY+VKbXWFC+2HMm\\n"
-  "ef62n+02ohAOBKtOsSOn8HE2wi7yMA0g8jRTd8kZcWBIkAhizPvl8pqG1F0DCmLn00rhPk\\n"
-  "Byq2pv4VBo953gK7f1AQ==\\n"
-  "---- END SSH2 PUBLIC KEY ----\\n";
+static const char *rfc4716_single_line_key_with_subject =
+  "---- BEGIN SSH2 PUBLIC KEY ----"
+  "Comment: \"2048-bit RSA, converted from OpenSSH by tj@Imp.local\""
+  "AAAAB3NzaC1yc2EAAAABIwAAAQEAzJ1CLwnVP9mUa8uyM+XBzxLxsRvGz4cS59aPTgdw7j"
+  "Gx1jCvC9ya400x7ej5Q4ubwlAAPblXzG5GYv2ROmYQ1DIjrhmR/61tDKUvAAZIgtvLZ00y"
+  "dqqpq5lG4ubVJ4gW6sxbPfq/X12kV1gxGsFLUJCgoYInZGyIONrnvmQjFIfIx+mQXaK84u"
+  "O6w0CT6KhRWgonajMrlO6P8O7qr80rFmOZsBNIMooyYrGTaMyxVsQK2SY+VKbXWFC+2HMm"
+  "ef62n+02ohAOBKtOsSOn8HE2wi7yMA0g8jRTd8kZcWBIkAhizPvl8pqG1F0DCmLn00rhPk"
+  "Byq2pv4VBo953gK7f1AQ=="
+  "---- END SSH2 PUBLIC KEY ----";
 
-static const char *rfc4716_multiline_key_with_subject =
-  "---- BEGIN SSH2 PUBLIC KEY ----\\n"
-  "Comment: \"2048-bit RSA, converted from OpenSSH by tj@Imp.local\"\\n"
-  "AAAAB3NzaC1yc2EAAAABIwAAAQEAzJ1CLwnVP9mUa8uyM+XBzxLxsRvGz4cS59aPTgdw7j\\n"
-  "Gx1jCvC9ya400x7ej5Q4ubwlAAPblXzG5GYv2ROmYQ1DIjrhmR/61tDKUvAAZIgtvLZ00y\\n"
-  "dqqpq5lG4ubVJ4gW6sxbPfq/X12kV1gxGsFLUJCgoYInZGyIONrnvmQjFIfIx+mQXaK84u\\n"
-  "O6w0CT6KhRWgonajMrlO6P8O7qr80rFmOZsBNIMooyYrGTaMyxVsQK2SY+VKbXWFC+2HMm\\n"
-  "ef62n+02ohAOBKtOsSOn8HE2wi7yMA0g8jRTd8kZcWBIkAhizPvl8pqG1F0DCmLn00rhPk\\n"
-  "Byq2pv4VBo953gK7f1AQ==\\n"
-  "---- END SSH2 PUBLIC KEY ----\\n";
+static const char *rfc4716_multi_line_key =
+  "---- BEGIN SSH2 PUBLIC KEY ----\n"
+  "AAAAB3NzaC1yc2EAAAABIwAAAQEAzJ1CLwnVP9mUa8uyM+XBzxLxsRvGz4cS59aPTgdw7j\n"
+  "Gx1jCvC9ya400x7ej5Q4ubwlAAPblXzG5GYv2ROmYQ1DIjrhmR/61tDKUvAAZIgtvLZ00y\n"
+  "dqqpq5lG4ubVJ4gW6sxbPfq/X12kV1gxGsFLUJCgoYInZGyIONrnvmQjFIfIx+mQXaK84u\n"
+  "O6w0CT6KhRWgonajMrlO6P8O7qr80rFmOZsBNIMooyYrGTaMyxVsQK2SY+VKbXWFC+2HMm\n"
+  "ef62n+02ohAOBKtOsSOn8HE2wi7yMA0g8jRTd8kZcWBIkAhizPvl8pqG1F0DCmLn00rhPk\n"
+  "Byq2pv4VBo953gK7f1AQ==\n"
+  "---- END SSH2 PUBLIC KEY ----\n";
+
+static const char *rfc4716_multi_line_key_with_subject =
+  "---- BEGIN SSH2 PUBLIC KEY ----\n"
+  "Comment: \"2048-bit RSA, converted from OpenSSH by tj@Imp.local\"\n"
+  "AAAAB3NzaC1yc2EAAAABIwAAAQEAzJ1CLwnVP9mUa8uyM+XBzxLxsRvGz4cS59aPTgdw7j\n"
+  "Gx1jCvC9ya400x7ej5Q4ubwlAAPblXzG5GYv2ROmYQ1DIjrhmR/61tDKUvAAZIgtvLZ00y\n"
+  "dqqpq5lG4ubVJ4gW6sxbPfq/X12kV1gxGsFLUJCgoYInZGyIONrnvmQjFIfIx+mQXaK84u\n"
+  "O6w0CT6KhRWgonajMrlO6P8O7qr80rFmOZsBNIMooyYrGTaMyxVsQK2SY+VKbXWFC+2HMm\n"
+  "ef62n+02ohAOBKtOsSOn8HE2wi7yMA0g8jRTd8kZcWBIkAhizPvl8pqG1F0DCmLn00rhPk\n"
+  "Byq2pv4VBo953gK7f1AQ==\n"
+  "---- END SSH2 PUBLIC KEY ----\n";
 
 static void set_up(void) {
   if (p == NULL) {
@@ -126,16 +137,16 @@ START_TEST (keys_parse_raw_single_line_test) {
   blob = "foo\n";
   bloblen = strlen(blob);
   res = sftp_ldap_keys_parse_raw(p, &blob, &bloblen, &key_data, &key_datalen);
-  fail_unless(res < 0, "Failed to handle invalid key");
+  fail_unless(res < 0, "Failed to handle invalid raw key");
   fail_unless(errno == ENOENT, "Expected ENOENT (%d), got %s (%d)", ENOENT,
     strerror(errno), errno);
 
-  blob = raw_key;
+  blob = pstrdup(p, raw_key);
   bloblen = strlen(raw_key);
   key_data = NULL;
   key_datalen = 0;
   res = sftp_ldap_keys_parse_raw(p, &blob, &bloblen, &key_data, &key_datalen);
-  fail_unless(res == 0, "Failed to handle valid key: %s", strerror(errno));
+  fail_unless(res == 0, "Failed to handle valid raw key: %s", strerror(errno));
 }
 END_TEST
 
@@ -173,12 +184,76 @@ START_TEST (keys_parse_rfc4716_invalid_params_test) {
 END_TEST
 
 START_TEST (keys_parse_rfc4716_single_line_test) {
-  /* One key WITH Comment/Subject headers (fail), one key without */
+  int res;
+  char *blob;
+  size_t bloblen;
+  unsigned char *key_data = NULL;
+  uint32_t key_datalen = 0;
+
+  blob = "foo\n";
+  bloblen = strlen(blob);
+  res = sftp_ldap_keys_parse_rfc4716(p, &blob, &bloblen, &key_data,
+    &key_datalen);
+  fail_unless(res < 0, "Failed to handle invalid RFC 4716 key");
+  fail_unless(errno == ENOENT, "Expected ENOENT (%d), got %s (%d)", ENOENT,
+    strerror(errno), errno);
+
+  blob = pstrdup(p, rfc4716_single_line_key_with_subject);
+  bloblen = strlen(rfc4716_single_line_key_with_subject);
+  key_data = NULL;
+  key_datalen = 0;
+  res = sftp_ldap_keys_parse_rfc4716(p, &blob, &bloblen, &key_data,
+    &key_datalen);
+  fail_unless(res < 0,
+    "Failed to handle unusable RFC 4716 key with Comment header");
+  fail_unless(errno == ENOENT, "Expected ENOENT (%d), got %s (%d)", ENOENT,
+    strerror(errno), errno);
+
+  blob = pstrdup(p, rfc4716_single_line_key);
+  bloblen = strlen(rfc4716_single_line_key);
+  key_data = NULL;
+  key_datalen = 0;
+  res = sftp_ldap_keys_parse_rfc4716(p, &blob, &bloblen, &key_data,
+    &key_datalen);
+  fail_unless(res == 0, "Failed to handle valid RFC 4716 key: %s",
+    strerror(errno));
 }
 END_TEST
 
 START_TEST (keys_parse_rfc4716_multi_line_test) {
-  /* One key WITH Comment/Subject headers (fail), one key without */
+  int res;
+  char *blob;
+  size_t bloblen;
+  unsigned char *key_data = NULL;
+  uint32_t key_datalen = 0;
+
+  blob = "foo\n";
+  bloblen = strlen(blob);
+  res = sftp_ldap_keys_parse_rfc4716(p, &blob, &bloblen, &key_data,
+    &key_datalen);
+  fail_unless(res < 0, "Failed to handle invalid RFC 4716 key");
+  fail_unless(errno == ENOENT, "Expected ENOENT (%d), got %s (%d)", ENOENT,
+    strerror(errno), errno);
+
+  blob = pstrdup(p, rfc4716_multi_line_key_with_subject);
+  bloblen = strlen(rfc4716_multi_line_key_with_subject);
+  key_data = NULL;
+  key_datalen = 0;
+  res = sftp_ldap_keys_parse_rfc4716(p, &blob, &bloblen, &key_data,
+    &key_datalen);
+  fail_unless(res < 0,
+    "Failed to handle unusable RFC 4716 key with Comment header");
+  fail_unless(errno == ENOENT, "Expected ENOENT (%d), got %s (%d)", ENOENT,
+    strerror(errno), errno);
+
+  blob = pstrdup(p, rfc4716_multi_line_key);
+  bloblen = strlen(rfc4716_multi_line_key);
+  key_data = NULL;
+  key_datalen = 0;
+  res = sftp_ldap_keys_parse_rfc4716(p, &blob, &bloblen, &key_data,
+    &key_datalen);
+  fail_unless(res == 0, "Failed to handle valid RFC 4716 key: %s",
+    strerror(errno));
 }
 END_TEST
 
