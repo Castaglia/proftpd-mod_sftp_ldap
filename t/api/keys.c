@@ -25,6 +25,7 @@
 /* Key-parsing tests. */
 
 #include "tests.h"
+#include "keys.h"
 
 static pool *p = NULL;
 
@@ -176,7 +177,7 @@ START_TEST (keys_parse_rfc4716_single_line_test) {
 }
 END_TEST
 
-START_TEST (keys_parse_rfc4716_multi_lines_test) {
+START_TEST (keys_parse_rfc4716_multi_line_test) {
   /* One key WITH Comment/Subject headers (fail), one key without */
 }
 END_TEST
