@@ -1,0 +1,54 @@
+env: TRAVIS_CI=true
+language: c
+
+compiler:
+  - gcc
+  - clang
+
+install:
+  # for unit tests
+  - sudo apt-get install -y check
+  # for OpenSSL support
+  - sudo apt-get install -y libssl-dev
+  # for LDAP support
+  - sudo apt-get install -y libldap2-dev libsasl2-dev
+  # for static code analysis
+  - sudo apt-get install -y cppcheck rats
+  # for test code coverage
+  - sudo apt-get install -y lcov
+  - gem install coveralls-lcov
+
+before_script:
+  - cd ${TRAVIS_BUILD_DIR}
+  - lcov --directory . --zerocounters
+
+script:
+  # - find . -type f -name "*.c" -print | grep -v t\/ | xargs cppcheck 2>&1
+  # - find . -type f -name "*.c" -print | grep -v t\/ | xargs rats --language=c
+  - git clone https://github.com/proftpd/proftpd.git
+  - mkdir -p proftpd/contrib/mod_sftp_ldap/
+  - cp *.[ch] proftpd/contrib/mod_sftp_ldap/
+  - cp mod_sftp_ldap.* proftpd/contrib/mod_sftp_ldap/
+  - cp Makefile.in proftpd/contrib/mod_sftp_ldap/
+  - cp config* proftpd/contrib/mod_sftp_ldap/
+  - cp install-sh proftpd/contrib/mod_sftp_ldap/
+  - cp -R t/ proftpd/contrib/mod_sftp_ldap/t/
+  - cd proftpd
+  - ./configure --enable-devel=coverage --enable-dso --enable-openssl --enable-tests --with-shared=mod_sftp:mod_sftp_ldap
+  - make
+  # Last, a build with a static module, and run the tests
+  - make clean
+  - ./configure --enable-devel=coverage --enable-openssl --enable-tests --with-modules=mod_sftp:mod_sftp_ldap
+  - make
+  - cd contrib/mod_sftp_ldap && make TEST_VERBOSE=1 check && cd ../../../
+
+after_success:
+  - cd ${TRAVIS_BUILD_DIR}
+  # capture the test coverage info
+  - lcov --ignore-errors gcov,source --base-directory ${TRAVIS_BUILD_DIR}/proftpd/contrib/mod_sftp_ldap --directory proftpd/contrib/mod_sftp_ldap --capture --output-file coverage.info
+  # filter out system and test code
+  - lcov --remove coverage.info 'api/*' 't/*' '/usr/*' --output-file coverage.info
+  # debug before upload
+  - lcov --list coverage.info
+  # upload coverage info to coveralls
+  # coveralls-lcov --repo-token Tu68HoFKAOmDwuCOwLyDPirvsfY78XCPe coverage.info

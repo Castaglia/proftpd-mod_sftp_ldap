@@ -20,374 +20,34 @@
  * to link this program with OpenSSL, and distribute the resulting
  * executable, without including the source code for OpenSSL in the source
  * distribution.
+ *
+ * -----DO NOT EDIT BELOW THIS LINE-----
+ * $Archive: mod_sftp_ldap.a $
  */
 
-#include "conf.h"
-#include "privs.h"
-#include "mod_sftp.h"
-
-#define MOD_SFTP_LDAP_VERSION		"mod_sftp_ldap/0.1"
+#include "mod_sftp_ldap.h"
+#include "keys.h"
 
 module sftp_ldap_module;
 
-#define SFTP_LDAP_BUFSZ			1024
-
-struct ldapstore_key {
-  const char *subject;
-
-  /* Key data */
-  unsigned char *key_data;
-  uint32_t key_datalen;
-};
-
 static const char *trace_channel = "ssh2";
-
-/* Given a blob of bytes retrieved from a single row, read that blob as if
- * it were text, line by line.
- */
-static char *ldapstore_getline(pool *p, char **blob, size_t *bloblen) {
-  char linebuf[SFTP_LDAP_BUFSZ], *line = "", *data;
-  size_t datalen;
-
-  data = *blob;
-  datalen = *bloblen;
-
-  if (data == NULL ||
-      datalen == 0) {
-    errno = EOF;
-    return NULL;
-  }
-
-  while (data != NULL && datalen > 0) {
-    char *ptr;
-    size_t delimlen, linelen;
-    int have_line_continuation = FALSE;
-
-    pr_signals_handle();
-
-    if (datalen <= 2) {
-      line = pstrcat(p, line, data, NULL);
-
-      *blob = NULL;
-      *bloblen = 0;
-
-      return line;
-    }
-
-    /* Find the CRLF markers in the data. */
-    ptr = strstr(data, "\r\n");
-    if (ptr != NULL) {
-      delimlen = 1;
-
-    } else {
-      ptr = strstr(data, "\n");
-      if (ptr != NULL) {
-        delimlen = 0;
-      }
-    }
-
-    if (ptr == NULL) {
-      /* Just return the rest of the data. */
-      line = pstrcat(p, line, data, NULL);
-
-      *blob = NULL;
-      *bloblen = 0;
-
-      return line;
-    }
-
-    linelen = (ptr - data + 1);
-
-    if (linelen == 1) {
-      data += (delimlen + 1);
-      datalen -= (delimlen + 1);
-
-      continue;
-    }
-
-    /* Watch out for lines larger than our buffer. */
-    if (linelen > sizeof(linebuf)) {
-      (void) pr_log_writefile(sftp_logfd, MOD_SFTP_LDAP_VERSION,
-        "line of key data (%lu bytes) exceeds buffer size, truncating; "
-        "this WILL cause authentication failures", (unsigned long) linelen);
-      linelen = sizeof(linebuf);
-    }
-
-    memcpy(linebuf, data, linelen);
-    linebuf[linelen-1] = '\0';
-
-    data += (linelen + delimlen);
-    datalen -= (linelen + delimlen);
-
-    /* Check for continued lines. */
-    if (linelen >= 2 &&
-        linebuf[linelen-2] == '\\') {
-      linebuf[linelen-2] = '\0';
-      have_line_continuation = TRUE;
-    }
-
-    line = pstrcat(p, line, linebuf, NULL);
-    linelen = strlen(line);
-
-    if (have_line_continuation) {
-      continue;
-    }
-
-    ptr = strchr(line, ':');
-    if (ptr != NULL) {
-      unsigned int header_taglen, header_valuelen;
-
-      /* We have a header.  Make sure the header tag is not longer than
-       * the specified length of 64 bytes, and that the header value is
-       * not longer than 1024 bytes.
-       */
-      header_taglen = ptr - line;
-      if (header_taglen > 64) {
-        (void) pr_log_writefile(sftp_logfd, MOD_SFTP_LDAP_VERSION,
-          "header tag too long (%u) in retrieved LDAP data", header_taglen);
-        errno = EINVAL;
-        return NULL;
-      }
-
-      /* Header value starts at 2 after the ':' (one for the mandatory
-       * space character.
-       */
-      header_valuelen = linelen - (header_taglen + 2);
-      if (header_valuelen > 1024) {
-        (void) pr_log_writefile(sftp_logfd, MOD_SFTP_LDAP_VERSION,
-          "header value too long (%u) in retrieved LDAP data", header_valuelen);
-        errno = EINVAL;
-        return NULL;
-      }
-    }
-
-    *blob = data;
-    *bloblen = datalen;
-
-    return line;
-  }
-
-  return NULL;
-}
-
-static struct ldapstore_key *ldapstore_get_key_raw(pool *p, char **blob,
-    size_t *bloblen) {
-  char chunk[SFTP_LDAP_BUFSZ], *data = NULL;
-  BIO *bio = NULL, *b64 = NULL, *bmem = NULL;
-  int chunklen;
-  long datalen = 0;
-  struct ldapstore_key *key = NULL;
-
-  bio = BIO_new(BIO_s_mem());
-
-  if (BIO_write(bio, (void *) *blob, *bloblen) < 0) {
-    (void) pr_log_writefile(sftp_logfd, MOD_SFTP_LDAP_VERSION,
-      "error buffering base64 data: %s", sftp_crypto_get_errors());
-  }
-
-  /* Add a base64 filter BIO, and read the data out, thus base64-decoding
-   * the key.  Write the decoded data into another memory BIO.
-   */
-  b64 = BIO_new(BIO_f_base64());
-  BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
-  bio = BIO_push(b64, bio);
-
-  bmem = BIO_new(BIO_s_mem());
-
-  memset(chunk, '\0', sizeof(chunk));
-  chunklen = BIO_read(bio, (void *) chunk, sizeof(chunk));
-
-  if (chunklen < 0 &&
-      !BIO_should_retry(bio)) {
-    (void) pr_log_writefile(sftp_logfd, MOD_SFTP_LDAP_VERSION,
-      "unable to base64-decode data from LDAP directory: %s",
-      sftp_crypto_get_errors());
-    BIO_free_all(bio);
-    BIO_free_all(bmem);
-
-    errno = EPERM;
-    return NULL;
-  }
-
-  while (chunklen > 0) {
-    pr_signals_handle();
-
-    if (BIO_write(bmem, (void *) chunk, chunklen) < 0) {
-      (void) pr_log_writefile(sftp_logfd, MOD_SFTP_LDAP_VERSION,
-        "error writing to memory BIO: %s", sftp_crypto_get_errors());
-      BIO_free_all(bio);
-      BIO_free_all(bmem);
-
-      errno = EPERM;
-      return NULL;
-    }
-
-    memset(chunk, '\0', sizeof(chunk));
-    chunklen = BIO_read(bio, (void *) chunk, sizeof(chunk));
-  }
-
-  datalen = BIO_get_mem_data(bmem, &data);
-
-  if (data != NULL &&
-      datalen > 0) {
-    key = pcalloc(p, sizeof(struct ldapstore_key));
-    key->key_data = pcalloc(p, datalen + 1);
-    key->key_datalen = datalen;
-    memcpy(key->key_data, data, datalen);
-
-  } else {
-    (void) pr_log_writefile(sftp_logfd, MOD_SFTP_LDAP_VERSION,
-      "error base64-decoding key data from LDAP directory");
-  }
-
-  BIO_free_all(bio);
-  bio = NULL;
-
-  BIO_free_all(bmem);
-  return key;
-}
-
-static struct ldapstore_key *ldapstore_get_key_rfc4716(pool *p, char **blob,
-    size_t *bloblen) {
-  char *line;
-  BIO *bio = NULL;
-  struct ldapstore_key *key = NULL;
-  size_t begin_markerlen = 0, end_markerlen = 0;
-
-  line = ldapstore_getline(p, blob, bloblen);
-  while (line == NULL &&
-         errno == EINVAL) {
-    pr_signals_handle();
-    line = ldapstore_getline(p, blob, bloblen);
-  }
-
-  if (line == NULL) {
-    return NULL;
-  }
-
-  begin_markerlen = strlen(SFTP_SSH2_PUBKEY_BEGIN_MARKER);
-  end_markerlen = strlen(SFTP_SSH2_PUBKEY_END_MARKER);
-
-  while (line != NULL) {
-    pr_signals_handle();
-
-    if (key == NULL &&
-        strncmp(line, SFTP_SSH2_PUBKEY_BEGIN_MARKER, begin_markerlen) == 0) {
-      key = pcalloc(p, sizeof(struct ldapstore_key));
-      bio = BIO_new(BIO_s_mem());
-
-    } else if (key != NULL &&
-               strncmp(line, SFTP_SSH2_PUBKEY_END_MARKER, end_markerlen) == 0) {
-      if (bio != NULL) {
-        char chunk[SFTP_LDAP_BUFSZ], *data = NULL;
-        BIO *b64 = NULL, *bmem = NULL;
-        int chunklen;
-        long datalen = 0;
-
-        /* Add a base64 filter BIO, and read the data out, thus base64-decoding
-         * the key.  Write the decoded data into another memory BIO.
-         */
-        b64 = BIO_new(BIO_f_base64());
-        BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
-        bio = BIO_push(b64, bio);
-
-        bmem = BIO_new(BIO_s_mem());
-
-        memset(chunk, '\0', sizeof(chunk));
-        chunklen = BIO_read(bio, (void *) chunk, sizeof(chunk));
-
-        if (chunklen < 0 &&
-            !BIO_should_retry(bio)) {
-          (void) pr_log_writefile(sftp_logfd, MOD_SFTP_LDAP_VERSION,
-            "unable to base64-decode RFC4716 key data from database: %s",
-          sftp_crypto_get_errors());
-          BIO_free_all(bio);
-          BIO_free_all(bmem);
-
-          errno = EPERM;
-          return NULL;
-        }
-
-        while (chunklen > 0) {
-          pr_signals_handle();
-
-          if (BIO_write(bmem, (void *) chunk, chunklen) < 0) {
-            (void) pr_log_writefile(sftp_logfd, MOD_SFTP_LDAP_VERSION,
-              "error writing to memory BIO: %s", sftp_crypto_get_errors());
-            BIO_free_all(bio);
-            BIO_free_all(bmem);
-
-            errno = EPERM;
-            return NULL;
-          }
-
-          memset(chunk, '\0', sizeof(chunk));
-          chunklen = BIO_read(bio, (void *) chunk, sizeof(chunk));
-        }
-
-        datalen = BIO_get_mem_data(bmem, &data);
-
-        if (data != NULL &&
-            datalen > 0) {
-          key = pcalloc(p, sizeof(struct ldapstore_key));
-          key->key_data = pcalloc(p, datalen + 1);
-          key->key_datalen = datalen;
-          memcpy(key->key_data, data, datalen);
-
-        } else {
-          (void) pr_log_writefile(sftp_logfd, MOD_SFTP_LDAP_VERSION,
-            "error base64-decoding RFC4716 key data from LDAP directory");
-        }
-
-        BIO_free_all(bio);
-        bio = NULL;
-
-        BIO_free_all(bmem);
-      }
-
-      break;
-
-    } else {
-      if (key) {
-        if (strstr(line, ": ") != NULL) {
-          if (strncasecmp(line, "Subject: ", 9) == 0) {
-            key->subject = pstrdup(p, line + 9);
-          }
-
-        } else {
-          if (BIO_write(bio, line, strlen(line)) < 0) {
-            (void) pr_log_writefile(sftp_logfd, MOD_SFTP_LDAP_VERSION,
-              "error buffering base64 data: %s", sftp_crypto_get_errors());
-          }
-        }
-      }
-    }
-
-    line = ldapstore_getline(p, blob, bloblen);
-    while (line == NULL &&
-           errno == EINVAL) {
-      pr_signals_handle();
-      line = ldapstore_getline(p, blob, bloblen);
-    }
-  }
-
-  return key;
-}
 
 static int ldapstore_verify_key_raw(pool *p, int nrow, char *ldap_data,
     size_t ldap_datalen, unsigned char *key_data, uint32_t key_datalen) {
-  struct ldapstore_key *key;
+  unsigned char *parsed_data = NULL;
+  uint32_t parsed_datalen = 0;
   int res;
 
-  key = ldapstore_get_key_raw(p, &ldap_data, &ldap_datalen);
-  if (key == NULL) {
+  res = sftp_ldap_keys_parse_raw(p, &ldap_data, &ldap_datalen, &parsed_data,
+    &parsed_datalen);
+  if (res < 0) {
     pr_trace_msg(trace_channel, 10,
-      "unable to parse data (row %u) as raw data", nrow+1);
+      "unable to parse data (row %u) as raw key", nrow+1);
     return -1;
   }
 
-  res = sftp_keys_compare_keys(p, key_data, key_datalen, key->key_data,
-    key->key_datalen);
+  res = sftp_keys_compare_keys(p, key_data, key_datalen, parsed_data,
+    parsed_datalen);
   if (res < 0) {
     (void) pr_log_writefile(sftp_logfd, MOD_SFTP_LDAP_VERSION,
       "error comparing client-sent host key with LDAP data (row %u): %s",
@@ -407,26 +67,36 @@ static int ldapstore_verify_key_raw(pool *p, int nrow, char *ldap_data,
 
 static int ldapstore_verify_key_rfc4716(pool *p, int nrow, char *ldap_data,
     size_t ldap_datalen, unsigned char *key_data, uint32_t key_datalen) {
-  struct ldapstore_key *key;
+  unsigned char *parsed_data = NULL;
+  uint32_t parsed_datalen = 0;
   int res;
 
-  key = ldapstore_get_key_rfc4716(p, &ldap_data, &ldap_datalen);
-  while (key != NULL) {
+  res = sftp_ldap_keys_parse_rfc4716(p, &ldap_data, &ldap_datalen, &parsed_data,
+    &parsed_datalen);
+  while (res == 0) {
     pr_signals_handle();
 
-    res = sftp_keys_compare_keys(p, key_data, key_datalen, key->key_data,
-      key->key_datalen);
+    res = sftp_keys_compare_keys(p, key_data, key_datalen, parsed_data,
+      parsed_datalen);
     if (res < 0) {
       (void) pr_log_writefile(sftp_logfd, MOD_SFTP_LDAP_VERSION,
         "error comparing client-sent key with LDAP data (row %u): %s",
         nrow+1, strerror(errno));
-      key = ldapstore_get_key_rfc4716(p, &ldap_data, &ldap_datalen);
+
+      parsed_data = NULL;
+      parsed_datalen = 0;
+      res = sftp_ldap_keys_parse_rfc4716(p, &ldap_data, &ldap_datalen,
+        &parsed_data, &parsed_datalen);
       continue;
 
     } else if (res == FALSE) {
       (void) pr_log_writefile(sftp_logfd, MOD_SFTP_LDAP_VERSION,
         "client-sent key does not match LDAP data (row %u)", nrow+1);
-      key = ldapstore_get_key_rfc4716(p, &ldap_data, &ldap_datalen);
+
+      parsed_data = NULL;
+      parsed_datalen = 0;
+      res = sftp_ldap_keys_parse_rfc4716(p, &ldap_data, &ldap_datalen,
+        &parsed_data, &parsed_datalen);
       continue;
     }
 
