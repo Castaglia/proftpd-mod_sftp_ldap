@@ -24,7 +24,10 @@
 
 #include "keys.h"
 
-#define SFTP_LDAP_BUFSZ			1024
+#define SFTP_LDAP_BUFSZ				1024
+
+#define SFTP_LDAP_KEY_BEGIN_MARKER_LEN		31
+#define SFTP_LDAP_KEY_END_MARKER_LEN		29
 
 /* Given a blob of bytes retrieved from a single row, read that blob as if
  * it were text, line by line.
@@ -267,11 +270,55 @@ int sftp_ldap_keys_parse_raw(pool *p, char **blob, size_t *bloblen,
   return res;
 }
 
+/* Note: When iterating backwards, be sure to ignore/skip over any potential
+ * end marker.
+ */
+static void find_key_start(char **line, size_t *linelen) {
+  register unsigned int i;
+
+  /* Do NOT examine the end marker. */
+  if (*linelen >= SFTP_LDAP_KEY_END_MARKER_LEN) {
+    size_t datalen;
+
+    datalen = *linelen - SFTP_LDAP_KEY_END_MARKER_LEN;
+    if (strncmp(*line + datalen, SFTP_SSH2_PUBKEY_END_MARKER, SFTP_LDAP_KEY_END_MARKER_LEN) == 0) {
+      i = datalen;
+
+    } else {
+      i = *linelen;
+    }
+
+  } else {
+    i = *linelen;
+  }
+
+  while (i-- > 0) {
+    char ch;
+
+    pr_signals_handle();
+
+    ch = (*line)[i];
+
+    if (('a' <= ch && ch <= 'z') ||
+        ('A' <= ch && ch <= 'Z') ||
+        ('0' <= ch && ch <= '9') ||
+        ch == '+' ||
+        ch == '/' ||
+        ch == '=') {
+      continue;
+    }
+
+    /* The start of the line, then, is the next character AFTER this one. */
+    *line = &((*line)[i+1]);
+    *linelen = *linelen - i - 1;
+    break;
+  }
+}
+
 int sftp_ldap_keys_parse_rfc4716(pool *p, char **blob, size_t *bloblen,
     unsigned char **key_data, uint32_t *key_datalen) {
   char *line;
   BIO *bio = NULL;
-  size_t begin_markerlen = 0, end_markerlen = 0;
   int had_key_data = FALSE, res = -1;
 
   if (p == NULL ||
@@ -294,9 +341,6 @@ int sftp_ldap_keys_parse_rfc4716(pool *p, char **blob, size_t *bloblen,
     return -1;
   }
 
-  begin_markerlen = strlen(SFTP_SSH2_PUBKEY_BEGIN_MARKER);
-  end_markerlen = strlen(SFTP_SSH2_PUBKEY_END_MARKER);
-
   while (line != NULL) {
     size_t linelen;
 
@@ -305,17 +349,17 @@ int sftp_ldap_keys_parse_rfc4716(pool *p, char **blob, size_t *bloblen,
     linelen = strlen(line);
 
     if (bio == NULL &&
-        strncmp(line, SFTP_SSH2_PUBKEY_BEGIN_MARKER, begin_markerlen) == 0) {
+        strncmp(line, SFTP_SSH2_PUBKEY_BEGIN_MARKER, SFTP_LDAP_KEY_BEGIN_MARKER_LEN) == 0) {
       bio = BIO_new(BIO_s_mem());
-      linelen -= begin_markerlen;
-      line += begin_markerlen;
+      linelen -= SFTP_LDAP_KEY_BEGIN_MARKER_LEN;
+      line += SFTP_LDAP_KEY_BEGIN_MARKER_LEN;
 
       had_key_data = TRUE;
     }
 
     if (bio != NULL &&
-        linelen >= end_markerlen &&
-        strncmp(line, SFTP_SSH2_PUBKEY_END_MARKER, end_markerlen) == 0) {
+        linelen >= SFTP_LDAP_KEY_END_MARKER_LEN &&
+        strncmp(line, SFTP_SSH2_PUBKEY_END_MARKER, SFTP_LDAP_KEY_END_MARKER_LEN) == 0) {
       char chunk[SFTP_LDAP_BUFSZ], *data = NULL;
       BIO *b64 = NULL, *bmem = NULL;
       int chunklen;
@@ -390,30 +434,29 @@ int sftp_ldap_keys_parse_rfc4716(pool *p, char **blob, size_t *bloblen,
         linelen > 0) {
       size_t chunklen;
 
-      /* Watch out for any Comment headers in the key data; we cannot handle
-       * those here.
+      /* Watch out for any headers in the key data; we cannot handle those
+       * here.  However, if we simply bail, it makes things difficult for the
+       * admin wishing to use the keys, as user authentication will fail.
+       *
+       * Thus we try some heuristics to avoid/skip the headers.  The key data
+       * in which we are interested is base64-encoded.  We thus iterate from
+       * the end of the line, looking for any non-base64 characters.  If found,
+       * we ignore them.
        */
-      if (strstr(line, "Comment:") != NULL) {
-        (void) pr_log_writefile(sftp_logfd, MOD_SFTP_LDAP_VERSION,
-          "unable to handle Comment header in RFC 4716 key, skippping");
-        BIO_free_all(bio);
-        errno = ENOENT;
-        res = -1;
-        break;
-      }
+      find_key_start(&line, &linelen);
 
       chunklen = linelen;
 
       /* Do NOT consume the end marker. */
-      if (linelen >= end_markerlen) {
+      if (linelen >= SFTP_LDAP_KEY_END_MARKER_LEN) {
         size_t datalen;
 
-        datalen = linelen - end_markerlen;
-        if (strncmp(line + datalen, SFTP_SSH2_PUBKEY_END_MARKER, end_markerlen) == 0) {
+        datalen = linelen - SFTP_LDAP_KEY_END_MARKER_LEN;
+        if (strncmp(line + datalen, SFTP_SSH2_PUBKEY_END_MARKER, SFTP_LDAP_KEY_END_MARKER_LEN) == 0) {
           /* Truncate the data to be written to the bio to not include the
            * end marker.
            */
-          chunklen -= end_markerlen;
+          chunklen -= SFTP_LDAP_KEY_END_MARKER_LEN;
         }
       }
 

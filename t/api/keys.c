@@ -41,9 +41,20 @@ static const char *rfc4716_single_line_key =
   "Byq2pv4VBo953gK7f1AQ=="
   "---- END SSH2 PUBLIC KEY ----";
 
-static const char *rfc4716_single_line_key_with_subject =
+static const char *rfc4716_single_line_key_with_comment =
   "---- BEGIN SSH2 PUBLIC KEY ----"
   "Comment: \"2048-bit RSA, converted from OpenSSH by tj@Imp.local\""
+  "AAAAB3NzaC1yc2EAAAABIwAAAQEAzJ1CLwnVP9mUa8uyM+XBzxLxsRvGz4cS59aPTgdw7j"
+  "Gx1jCvC9ya400x7ej5Q4ubwlAAPblXzG5GYv2ROmYQ1DIjrhmR/61tDKUvAAZIgtvLZ00y"
+  "dqqpq5lG4ubVJ4gW6sxbPfq/X12kV1gxGsFLUJCgoYInZGyIONrnvmQjFIfIx+mQXaK84u"
+  "O6w0CT6KhRWgonajMrlO6P8O7qr80rFmOZsBNIMooyYrGTaMyxVsQK2SY+VKbXWFC+2HMm"
+  "ef62n+02ohAOBKtOsSOn8HE2wi7yMA0g8jRTd8kZcWBIkAhizPvl8pqG1F0DCmLn00rhPk"
+  "Byq2pv4VBo953gK7f1AQ=="
+  "---- END SSH2 PUBLIC KEY ----";
+
+static const char *rfc4716_single_line_key_with_xtag =
+  "---- BEGIN SSH2 PUBLIC KEY ----"
+  "X-Tag: Foo Bar"
   "AAAAB3NzaC1yc2EAAAABIwAAAQEAzJ1CLwnVP9mUa8uyM+XBzxLxsRvGz4cS59aPTgdw7j"
   "Gx1jCvC9ya400x7ej5Q4ubwlAAPblXzG5GYv2ROmYQ1DIjrhmR/61tDKUvAAZIgtvLZ00y"
   "dqqpq5lG4ubVJ4gW6sxbPfq/X12kV1gxGsFLUJCgoYInZGyIONrnvmQjFIfIx+mQXaK84u"
@@ -62,7 +73,7 @@ static const char *rfc4716_multi_line_key =
   "Byq2pv4VBo953gK7f1AQ==\n"
   "---- END SSH2 PUBLIC KEY ----\n";
 
-static const char *rfc4716_multi_line_key_with_subject =
+static const char *rfc4716_multi_line_key_with_comment =
   "---- BEGIN SSH2 PUBLIC KEY ----\n"
   "Comment: \"2048-bit RSA, converted from OpenSSH by tj@Imp.local\"\n"
   "AAAAB3NzaC1yc2EAAAABIwAAAQEAzJ1CLwnVP9mUa8uyM+XBzxLxsRvGz4cS59aPTgdw7j\n"
@@ -198,16 +209,23 @@ START_TEST (keys_parse_rfc4716_single_line_test) {
   fail_unless(errno == ENOENT, "Expected ENOENT (%d), got %s (%d)", ENOENT,
     strerror(errno), errno);
 
-  blob = pstrdup(p, rfc4716_single_line_key_with_subject);
-  bloblen = strlen(rfc4716_single_line_key_with_subject);
+  blob = pstrdup(p, rfc4716_single_line_key_with_comment);
+  bloblen = strlen(rfc4716_single_line_key_with_comment);
   key_data = NULL;
   key_datalen = 0;
   res = sftp_ldap_keys_parse_rfc4716(p, &blob, &bloblen, &key_data,
     &key_datalen);
-  fail_unless(res < 0,
-    "Failed to handle unusable RFC 4716 key with Comment header");
-  fail_unless(errno == ENOENT, "Expected ENOENT (%d), got %s (%d)", ENOENT,
-    strerror(errno), errno);
+  fail_unless(res == 0,
+    "Failed to handle RFC 4716 key with Comment header: %s", strerror(errno));
+
+  blob = pstrdup(p, rfc4716_single_line_key_with_xtag);
+  bloblen = strlen(rfc4716_single_line_key_with_xtag);
+  key_data = NULL;
+  key_datalen = 0;
+  res = sftp_ldap_keys_parse_rfc4716(p, &blob, &bloblen, &key_data,
+    &key_datalen);
+  fail_unless(res == 0,
+    "Failed to handle RFC 4716 key with X-Tag header: %s", strerror(errno));
 
   blob = pstrdup(p, rfc4716_single_line_key);
   bloblen = strlen(rfc4716_single_line_key);
@@ -235,16 +253,14 @@ START_TEST (keys_parse_rfc4716_multi_line_test) {
   fail_unless(errno == ENOENT, "Expected ENOENT (%d), got %s (%d)", ENOENT,
     strerror(errno), errno);
 
-  blob = pstrdup(p, rfc4716_multi_line_key_with_subject);
-  bloblen = strlen(rfc4716_multi_line_key_with_subject);
+  blob = pstrdup(p, rfc4716_multi_line_key_with_comment);
+  bloblen = strlen(rfc4716_multi_line_key_with_comment);
   key_data = NULL;
   key_datalen = 0;
   res = sftp_ldap_keys_parse_rfc4716(p, &blob, &bloblen, &key_data,
     &key_datalen);
-  fail_unless(res < 0,
-    "Failed to handle unusable RFC 4716 key with Comment header");
-  fail_unless(errno == ENOENT, "Expected ENOENT (%d), got %s (%d)", ENOENT,
-    strerror(errno), errno);
+  fail_unless(res == 0,
+    "Failed to handle RFC 4716 key with Comment header: %s", strerror(errno));
 
   blob = pstrdup(p, rfc4716_multi_line_key);
   bloblen = strlen(rfc4716_multi_line_key);
