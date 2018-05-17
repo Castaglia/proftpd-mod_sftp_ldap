@@ -1,6 +1,6 @@
 /*
  * ProFTPD - mod_sftp_ldap API testsuite
- * Copyright (c) 2016 TJ Saunders <tj@castaglia.org>
+ * Copyright (c) 2016-2018 TJ Saunders <tj@castaglia.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -161,6 +161,9 @@ void pr_log_pri(int prio, const char *fmt, ...) {
   }
 }
 
+void pr_log_stacktrace(int fd, const char *name) {
+}
+
 int pr_log_writefile(int fd, const char *name, const char *fmt, ...) {
   if (getenv("TEST_VERBOSE") != NULL) {
     va_list msg;
@@ -185,6 +188,10 @@ void pr_session_disconnect(module *m, int reason_code, const char *details) {
 }
 
 void pr_session_end(int flags) {
+}
+
+const char *pr_session_get_protocol(int flags) {
+  return "ftp";
 }
 
 int pr_session_set_protocol(const char *proto) {
