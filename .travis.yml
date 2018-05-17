@@ -35,11 +35,11 @@ script:
   - cp install-sh proftpd/contrib/mod_sftp_ldap/
   - cp -R t/ proftpd/contrib/mod_sftp_ldap/t/
   - cd proftpd
-  - ./configure --enable-devel=coverage --enable-dso --enable-openssl --enable-tests --with-shared=mod_sftp:mod_sftp_ldap
+  - ./configure LIBS="-lm -lrt -pthread" --enable-devel=coverage --enable-dso --enable-openssl --enable-tests --with-shared=mod_sftp:mod_sftp_ldap
   - make
   # Last, a build with a static module, and run the tests
   - make clean
-  - ./configure --enable-devel=coverage --enable-openssl --enable-tests --with-modules=mod_sftp:mod_sftp_ldap
+  - ./configure LIBS="-lm -lrt -pthread" --enable-devel=coverage --enable-openssl --enable-tests --with-modules=mod_sftp:mod_sftp_ldap
   - make
   - cd contrib/mod_sftp_ldap && make TEST_VERBOSE=1 check && cd ../../../
 
