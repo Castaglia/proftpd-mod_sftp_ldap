@@ -37,7 +37,7 @@
 
 Suite *tests_get_keys_suite(void);
 
-volatile unsigned int recvd_signal_flags;
+extern volatile unsigned int recvd_signal_flags;
 extern pid_t mpid;
 extern server_rec *main_server;
 
