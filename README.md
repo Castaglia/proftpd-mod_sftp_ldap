@@ -3,7 +3,7 @@ proftpd-mod_sftp_ldap
 
 Status
 ------
-[![Build Status](https://travis-ci.org/Castaglia/proftpd-mod_sftp_ldap.svg?branch=master)](https://travis-ci.org/Castaglia/proftpd-mod_sftp_ldap)
+[![GitHub Actions CI Status](https://github.com/Castaglia/proftpd-mod_sftp_ldap/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/Castaglia/proftpd-mod_sftp_ldap/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-GPL-brightgreen.svg)](https://img.shields.io/badge/license-GPL-brightgreen.svg)
 
 Synopsis
