@@ -1,6 +1,6 @@
 /*
  * ProFTPD: mod_sftp_ldap keys
- * Copyright (c) 2010-2016 TJ Saunders
+ * Copyright (c) 2010-2023 TJ Saunders
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@
  * it were text, line by line.
  */
 static char *get_line(pool *p, char **blob, size_t *bloblen) {
-  char linebuf[SFTP_LDAP_BUFSZ], *line = "", *data;
+  char linebuf[SFTP_LDAP_BUFSZ], *line = "", *data = NULL;
   size_t datalen;
 
   data = *blob;
@@ -116,7 +116,7 @@ static char *get_line(pool *p, char **blob, size_t *bloblen) {
     line = pstrcat(p, line, linebuf, NULL);
     linelen = strlen(line);
 
-    if (have_line_continuation) {
+    if (have_line_continuation == TRUE) {
       continue;
     }
 
