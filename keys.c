@@ -46,8 +46,8 @@ static char *get_line(pool *p, char **blob, size_t *bloblen) {
   }
 
   while (data != NULL && datalen > 0) {
-    char *ptr;
-    size_t delimlen, linelen;
+    char *ptr = NULL;
+    size_t delimlen = 0, linelen = 0;
     int have_line_continuation = FALSE;
 
     pr_signals_handle();
