@@ -102,7 +102,7 @@ static void tear_down(void) {
   if (p) {
     destroy_pool(p);
     sftp_pool = p = NULL;
-  } 
+  }
 }
 
 START_TEST (keys_parse_raw_invalid_params_test) {
