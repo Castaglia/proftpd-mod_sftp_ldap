@@ -1,6 +1,6 @@
 /*
  * ProFTPD - mod_sftp_ldap keys
- * Copyright (c) 2016 TJ Saunders
+ * Copyright (c) 2016-2023 TJ Saunders
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,6 +31,6 @@ int sftp_ldap_keys_parse_raw(pool *p, char **blob, size_t *bloblen,
   unsigned char **key_data, uint32_t *key_datalen);
 
 int sftp_ldap_keys_parse_rfc4716(pool *p, char **blob, size_t *bloblen,
-  unsigned char **key_data, uint32_t *key_datalen);
+  unsigned char **key_data, uint32_t *key_datalen, pr_table_t *headers);
 
 #endif /* MOD_SFTP_LDAP_KEYS_H */

@@ -1,6 +1,6 @@
 /*
  * ProFTPD - mod_sftp_ldap testsuite
- * Copyright (c) 2016 TJ Saunders <tj@castaglia.org>
+ * Copyright (c) 2016-2023 TJ Saunders <tj@castaglia.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -167,27 +167,27 @@ START_TEST (keys_parse_rfc4716_invalid_params_test) {
   size_t bloblen = 0;
   unsigned char *key_data = NULL;
 
-  res = sftp_ldap_keys_parse_rfc4716(NULL, NULL, NULL, NULL, NULL);
+  res = sftp_ldap_keys_parse_rfc4716(NULL, NULL, NULL, NULL, NULL, NULL);
   fail_unless(res < 0, "Failed to handle null pool");
   fail_unless(errno == EINVAL, "Expected EINVAL (%d), got %s (%d)", EINVAL,
     strerror(errno), errno);
 
-  res = sftp_ldap_keys_parse_rfc4716(p, NULL, NULL, NULL, NULL);
+  res = sftp_ldap_keys_parse_rfc4716(p, NULL, NULL, NULL, NULL, NULL);
   fail_unless(res < 0, "Failed to handle null blob");
   fail_unless(errno == EINVAL, "Expected EINVAL (%d), got %s (%d)", EINVAL,
     strerror(errno), errno);
 
-  res = sftp_ldap_keys_parse_rfc4716(p, &blob, NULL, NULL, NULL);
+  res = sftp_ldap_keys_parse_rfc4716(p, &blob, NULL, NULL, NULL, NULL);
   fail_unless(res < 0, "Failed to handle null bloblen");
   fail_unless(errno == EINVAL, "Expected EINVAL (%d), got %s (%d)", EINVAL,
     strerror(errno), errno);
 
-  res = sftp_ldap_keys_parse_rfc4716(p, &blob, &bloblen, NULL, NULL);
+  res = sftp_ldap_keys_parse_rfc4716(p, &blob, &bloblen, NULL, NULL, NULL);
   fail_unless(res < 0, "Failed to handle null key data");
   fail_unless(errno == EINVAL, "Expected EINVAL (%d), got %s (%d)", EINVAL,
     strerror(errno), errno);
 
-  res = sftp_ldap_keys_parse_rfc4716(p, &blob, &bloblen, &key_data, NULL);
+  res = sftp_ldap_keys_parse_rfc4716(p, &blob, &bloblen, &key_data, NULL, NULL);
   fail_unless(res < 0, "Failed to handle null key datalen");
   fail_unless(errno == EINVAL, "Expected EINVAL (%d), got %s (%d)", EINVAL,
     strerror(errno), errno);
@@ -200,39 +200,47 @@ START_TEST (keys_parse_rfc4716_single_line_test) {
   size_t bloblen;
   unsigned char *key_data = NULL;
   uint32_t key_datalen = 0;
+  pr_table_t *headers = NULL;
 
+  mark_point();
   blob = "foo\n";
   bloblen = strlen(blob);
   res = sftp_ldap_keys_parse_rfc4716(p, &blob, &bloblen, &key_data,
-    &key_datalen);
+    &key_datalen, NULL);
   fail_unless(res < 0, "Failed to handle invalid RFC 4716 key");
   fail_unless(errno == ENOENT, "Expected ENOENT (%d), got %s (%d)", ENOENT,
     strerror(errno), errno);
 
+  mark_point();
   blob = pstrdup(p, rfc4716_single_line_key_with_comment);
   bloblen = strlen(rfc4716_single_line_key_with_comment);
   key_data = NULL;
   key_datalen = 0;
+  headers = pr_table_nalloc(p, 0, 1);
   res = sftp_ldap_keys_parse_rfc4716(p, &blob, &bloblen, &key_data,
-    &key_datalen);
+    &key_datalen, headers);
   fail_unless(res == 0,
     "Failed to handle RFC 4716 key with Comment header: %s", strerror(errno));
 
+  mark_point();
   blob = pstrdup(p, rfc4716_single_line_key_with_xtag);
   bloblen = strlen(rfc4716_single_line_key_with_xtag);
   key_data = NULL;
   key_datalen = 0;
+  headers = pr_table_nalloc(p, 0, 1);
   res = sftp_ldap_keys_parse_rfc4716(p, &blob, &bloblen, &key_data,
-    &key_datalen);
+    &key_datalen, headers);
   fail_unless(res == 0,
     "Failed to handle RFC 4716 key with X-Tag header: %s", strerror(errno));
 
+  mark_point();
   blob = pstrdup(p, rfc4716_single_line_key);
   bloblen = strlen(rfc4716_single_line_key);
   key_data = NULL;
   key_datalen = 0;
+  headers = pr_table_nalloc(p, 0, 1);
   res = sftp_ldap_keys_parse_rfc4716(p, &blob, &bloblen, &key_data,
-    &key_datalen);
+    &key_datalen, headers);
   fail_unless(res == 0, "Failed to handle valid RFC 4716 key: %s",
     strerror(errno));
 }
@@ -248,7 +256,7 @@ START_TEST (keys_parse_rfc4716_multi_line_test) {
   blob = "foo\n";
   bloblen = strlen(blob);
   res = sftp_ldap_keys_parse_rfc4716(p, &blob, &bloblen, &key_data,
-    &key_datalen);
+    &key_datalen, NULL);
   fail_unless(res < 0, "Failed to handle invalid RFC 4716 key");
   fail_unless(errno == ENOENT, "Expected ENOENT (%d), got %s (%d)", ENOENT,
     strerror(errno), errno);
@@ -258,7 +266,7 @@ START_TEST (keys_parse_rfc4716_multi_line_test) {
   key_data = NULL;
   key_datalen = 0;
   res = sftp_ldap_keys_parse_rfc4716(p, &blob, &bloblen, &key_data,
-    &key_datalen);
+    &key_datalen, NULL);
   fail_unless(res == 0,
     "Failed to handle RFC 4716 key with Comment header: %s", strerror(errno));
 
@@ -267,7 +275,7 @@ START_TEST (keys_parse_rfc4716_multi_line_test) {
   key_data = NULL;
   key_datalen = 0;
   res = sftp_ldap_keys_parse_rfc4716(p, &blob, &bloblen, &key_data,
-    &key_datalen);
+    &key_datalen, NULL);
   fail_unless(res == 0, "Failed to handle valid RFC 4716 key: %s",
     strerror(errno));
 }
