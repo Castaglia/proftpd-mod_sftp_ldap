@@ -316,7 +316,7 @@ static void find_key_start(char **line, size_t *linelen) {
 }
 
 int sftp_ldap_keys_parse_rfc4716(pool *p, char **blob, size_t *bloblen,
-    unsigned char **key_data, uint32_t *key_datalen) {
+    unsigned char **key_data, uint32_t *key_datalen, pr_table_t *headers) {
   char *line;
   BIO *bio = NULL;
   int had_key_data = FALSE, res = -1;

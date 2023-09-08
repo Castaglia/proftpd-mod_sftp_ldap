@@ -1,6 +1,6 @@
 /*
  * ProFTPD: mod_sftp_ldap -- LDAP backend module for retrieving authorized keys
- * Copyright (c) 2010-2016 TJ Saunders
+ * Copyright (c) 2010-2023 TJ Saunders
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -66,13 +66,14 @@ static int ldapstore_verify_key_raw(pool *p, int nrow, char *ldap_data,
 }
 
 static int ldapstore_verify_key_rfc4716(pool *p, int nrow, char *ldap_data,
-    size_t ldap_datalen, unsigned char *key_data, uint32_t key_datalen) {
+    size_t ldap_datalen, unsigned char *key_data, uint32_t key_datalen,
+    pr_table_t *headers) {
   unsigned char *parsed_data = NULL;
   uint32_t parsed_datalen = 0;
   int res;
 
   res = sftp_ldap_keys_parse_rfc4716(p, &ldap_data, &ldap_datalen, &parsed_data,
-    &parsed_datalen);
+    &parsed_datalen, headers);
   while (res == 0) {
     pr_signals_handle();
 
@@ -86,7 +87,7 @@ static int ldapstore_verify_key_rfc4716(pool *p, int nrow, char *ldap_data,
       parsed_data = NULL;
       parsed_datalen = 0;
       res = sftp_ldap_keys_parse_rfc4716(p, &ldap_data, &ldap_datalen,
-        &parsed_data, &parsed_datalen);
+        &parsed_data, &parsed_datalen, headers);
       continue;
 
     } else if (res == FALSE) {
@@ -96,7 +97,7 @@ static int ldapstore_verify_key_rfc4716(pool *p, int nrow, char *ldap_data,
       parsed_data = NULL;
       parsed_datalen = 0;
       res = sftp_ldap_keys_parse_rfc4716(p, &ldap_data, &ldap_datalen,
-        &parsed_data, &parsed_datalen);
+        &parsed_data, &parsed_datalen, headers);
       continue;
     }
 
@@ -106,14 +107,23 @@ static int ldapstore_verify_key_rfc4716(pool *p, int nrow, char *ldap_data,
   return -1;
 }
 
+#if PROFTPD_VERSION_NUMBER >= 0x0001030901
+static int ldapstore_verify_user_key(sftp_keystore_t *store, pool *p,
+    const char *user, unsigned char *key_data, uint32_t key_datalen,
+    pr_table_t *headers) {
+#else
 static int ldapstore_verify_user_key(sftp_keystore_t *store, pool *p,
     const char *user, unsigned char *key_data, uint32_t key_datalen) {
+#endif /* Prior to ProFTPD 1.3.9rc1 */
   register unsigned int i;
   pool *tmp_pool;
   cmdtable *ldap_cmdtab;
   cmd_rec *ldap_cmd;
   modret_t *ldap_res;
   array_header *ldap_keys;
+#if PROFTPD_VERSION_NUMBER < 0x0001030901
+  pr_table_t *headers = NULL;
+#endif /* Prior to ProFTPD 1.3.9rc1 */
   char **values;
   int res;
 
@@ -168,7 +178,7 @@ static int ldapstore_verify_user_key(sftp_keystore_t *store, pool *p,
     ldap_datalen = strlen(values[i]);
 
     res = ldapstore_verify_key_rfc4716(p, i, ldap_data, ldap_datalen, key_data,
-      key_datalen);
+      key_datalen, headers);
     if (res == 0) {
       pr_trace_msg(trace_channel, 10, "found matching RFC4716 public key "
         "(row %u) for user '%s'", i+1, user);
