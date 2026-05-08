@@ -15,6 +15,11 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
+      # Let's try opting into use of Nodejs v24; see:
+      #  https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+      # GitHub runners still causing problems with NodeJS v20; see:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
       CI: true
 
     strategy:
@@ -24,25 +29,25 @@ jobs:
           - gcc
         container:
           - almalinux:8
-          - alpine:3.14
-          - ubuntu:18.04
+          - alpine:3.18
+          - ubuntu:22.04
 
     container: ${{ matrix.container }}
 
     steps:
       - name: Checkout ProFTPD
-        uses: actions/checkout@v2
+        uses: actions/checkout@v6
         with:
           repository: proftpd/proftpd
           path: proftpd
 
       - name: Checkout module source code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v6
         with:
           path: proftpd/contrib/mod_sftp_ldap
 
       - name: Whitespace check
-        if: ${{ matrix.container == 'ubuntu:18.04' }}
+        if: ${{ matrix.container == 'ubuntu:22.04' }}
         run: |
           apt-get update -qq
           apt-get install -y git
@@ -55,11 +60,11 @@ jobs:
           fi
 
       - name: Install Alpine packages
-        if: ${{ matrix.container == 'alpine:3.14' }}
+        if: ${{ matrix.container == 'alpine:3.18' }}
         run: |
           apk update
           # for builds
-          apk add bash build-base clang compiler-rt-static gcc make zlib-dev
+          apk add bash build-base clang compiler-rt gcc make zlib-dev
           # for unit tests
           apk add check check-dev subunit subunit-dev
 
@@ -97,7 +102,7 @@ jobs:
           openssl version -a
 
       - name: Install Ubuntu packages
-        if: ${{ matrix.container == 'ubuntu:18.04' }}
+        if: ${{ matrix.container == 'ubuntu:22.04' }}
         run: |
           apt-get update -qq
           # for builds
@@ -123,7 +128,7 @@ jobs:
           openssl version -a
 
       - name: Prepare code coverage
-        if: ${{ matrix.container == 'ubuntu:18.04' }}
+        if: ${{ matrix.container == 'ubuntu:22.04' }}
         run: |
           lcov --directory proftpd --zerocounters
 
@@ -164,7 +169,7 @@ jobs:
           make install
 
       - name: Check HTML docs
-        if: ${{ matrix.container == 'ubuntu:18.04' }}
+        if: ${{ matrix.container == 'ubuntu:22.04' }}
         run: |
           cd proftpd/contrib/mod_sftp_ldap
           for f in $(/bin/ls *.html); do echo "Processing $f"; tidy -errors -omit -q $f; done || exit 0
