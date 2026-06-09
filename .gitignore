@@ -3,9 +3,11 @@ Makefile
 config.log
 config.status
 autom4te.cache
+mod_sftp_ldap.h
 tests.log
 .libs
 .*.swp
+*.a
 *.la
 *.lo
 *.o

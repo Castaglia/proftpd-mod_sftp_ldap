@@ -1,0 +1,57 @@
+dn: OU=users,DC=castaglia,DC=org
+changetype: add
+objectClass: top
+objectClass: organizationalUnit
+ou: users
+
+dn: OU=groups,DC=castaglia,DC=org
+changetype: add
+objectClass: top
+objectClass: organizationalUnit
+ou: groups
+
+dn: CN=proftpd,OU=users,DC=castaglia,DC=org
+changetype: add
+objectClass: top
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+objectClass: ldapPublicKey
+cn: proftpd
+uid: proftpd
+sn: LDAP user
+gecos: LDAP user
+uidNumber: 500
+gidNumber: 500
+loginShell: /bin/bash
+homeDirectory: /tmp
+userPassword: proftpd
+shadowLastChange: 0
+shadowMax: 0
+shadowWarning: 0
+# Note: the leading single space on the following lines are REQUIRED
+sshPublicKey: ---- BEGIN SSH2 PUBLIC KEY ----
+ AAAAB3NzaC1yc2EAAAABIwAAAQEAzJ1CLwnVP9mUa8uyM+XBzxLxsRvGz4cS59aPTgdw7j
+ Gx1jCvC9ya400x7ej5Q4ubwlAAPblXzG5GYv2ROmYQ1DIjrhmR/61tDKUvAAZIgtvLZ00y
+ dqqpq5lG4ubVJ4gW6sxbPfq/X12kV1gxGsFLUJCgoYInZGyIONrnvmQjFIfIx+mQXaK84u
+ O6w0CT6KhRWgonajMrlO6P8O7qr80rFmOZsBNIMooyYrGTaMyxVsQK2SY+VKbXWFC+2HMm
+ ef62n+02ohAOBKtOsSOn8HE2wi7yMA0g8jRTd8kZcWBIkAhizPvl8pqG1F0DCmLn00rhPk
+ Byq2pv4VBo953gK7f1AQ==
+ ---- END SSH2 PUBLIC KEY ----
+
+# Note that `posixGroup` is an _auxiliary_ class, not a structural class,
+# thus we have to use `groupOfNames`; this, in turn, means that we have
+# to provide `member`, but mod_ldap defaults to looking for `memberUid`
+# for groups.
+dn: CN=proftpd,OU=groups,DC=castaglia,DC=org
+changetype: add
+objectClass: top
+objectClass: groupOfNames
+objectClass: posixGroup
+cn: proftpd
+gidNumber: 500
+memberUid: foo
+memberUid: bar
+memberUid: baz
+memberUid: proftpd
+member: CN=proftpd,OU=users,DC=castaglia,DC=org
