@@ -112,11 +112,9 @@ jobs:
 
           # for LDAP support 
           apt-get install -y libldap2-dev libsasl2-dev
-
           # for OpenSSL support
           apt-get install -y libssl-dev
 
-          # for integration/regression test
           # for test code coverage
           apt-get install -y lcov ruby
           gem install coveralls-lcov
